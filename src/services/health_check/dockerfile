@@ -1,0 +1,21 @@
+#build
+FROM golang:1.21 as builder
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go.mod tidy
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o my-go-app .
+
+#stage 2
+
+FROM scratch 
+
+COPY --from=builder /app/my-go-app /my-go-app
+
+EXPOSE 8080
+
+ENTRYPOINT [ "/my-go-app" ]
